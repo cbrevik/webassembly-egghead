@@ -1,0 +1,36 @@
+<!doctype html>
+<title>WASM Test</title>
+<script>
+    function fetchAndCompileWasmModules(urls) {
+        return Promise.all(urls.map(async url => {
+            const result = await fetch(url)
+            if (!result.ok) {
+                throw new Error(`Unable to fetch Web Assembly file ${url}`);
+            }
+            const bytes = await result.arrayBuffer();
+            return await WebAssembly.compile(bytes);
+        }));
+    }
+
+    const run = async () => {
+        let mem = new WebAssembly.Memory({ initial: 1 });
+
+        const [program, memory] = await fetchAndCompileWasmModules(['./program.wasm', './memory.wasm']);
+        const memoryModule = await WebAssembly.instantiate(memory, {
+            env: {
+                memory: mem
+            }
+        });
+        const programModule = await WebAssembly.instantiate(program, {
+            env: {
+                malloc: memoryModule.exports.malloc,
+                free: memoryModule.exports.free,
+                memory: mem
+            }
+        });
+
+        console.log(programModule.exports.createRecord(2, 2.2, 4.2))
+    }
+
+    run()
+</script>
