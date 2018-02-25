@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>JS Collision demo</title>
+
+<body style="margin: 0; overflow: hidden">
+    <canvas id="canvas" style="width: 100vw; height: 100vh; display:block;">
+    </canvas>
+</body>
+<script type="module">
+    import render from "./lib/render.js";
+
+    const circleCount = 10000;
+    const circleData = new Float32Array(3 * circleCount);
+
+    const circleVData = new Float32Array(2 * circleCount);
+
+    function init(displayWidth, displayHeight) {
+        for (let i = 0, iv = 0; i < circleData.length; i += 3, iv += 2) {
+            circleData[i] = displayWidth * Math.random();
+            circleData[i + 1] = displayHeight * Math.random();
+            circleData[i + 2] = 5;
+
+            circleVData[iv] = Math.random() - 0.5;
+            circleVData[iv + 1] = Math.random() - 0.5;
+        }
+    }
+
+
+    function timeStep(displayWidth, displayHeight) {
+        for (let i = 0, iv = 0; i < circleData.length; i += 3, iv += 2) {
+            circleData[i] += circleVData[iv];
+            circleData[i + 1] += circleVData[iv + 1];
+
+            if (circleData[i] > displayWidth || circleData[i] < 0)
+                circleVData[iv] = -circleVData[iv];
+            if (circleData[i + 1] > displayHeight || circleData[i + 1] < 0)
+                circleVData[iv + 1] = -circleVData[iv + 1];
+        }
+    }
+
+    render(circleData, circleCount, init, timeStep);
+</script>

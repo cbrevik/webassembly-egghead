@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>JS Collision demo</title>
+
+<body style="margin: 0; overflow: hidden">
+    <canvas id="canvas" style="width: 100vw; height: 100vh; display:block;">
+    </canvas>
+</body>
+<script type="module">
+    import render from "./lib/render.js";
+
+    async function fetchAndInstantiateWasm(url, imports) {
+        const result = await fetch(url);
+        if (!result.ok) {
+            throw new Error(`Unable to fetch Web Assembly file ${url}`);
+        }
+        const bytes = await result.arrayBuffer();
+        const module = await WebAssembly.compile(bytes);
+        const instance = await WebAssembly.instantiate(module, imports || {});
+        return instance.exports;
+    }
+
+    async function run() {
+        const module = await fetchAndInstantiateWasm("./demo.wasm", {
+            env: {
+                randomf: Math.random
+            }
+        })
+
+        const circleCount = module.getCircleCount();
+        const circleDataOffset = module.getCircleDataOffset();
+        const circleData = new Float32Array(module.memory.buffer, circleDataOffset, circleCount * 3);
+
+        render(circleData, circleCount, module.init, module.timeStep);
+    }
+
+    run()
+
+</script>
